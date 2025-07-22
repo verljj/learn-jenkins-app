@@ -4,7 +4,7 @@ pipeline {
    environment {
       NETLIFY_SITE_ID = '62e8bad1-a86a-41f3-8400-e7a430f82bcb'
       NETLIFY_AUTH_TOKEN = credentials('netlify-token')
-   }
+    }
 
    stages {
    /*
@@ -94,6 +94,28 @@ pipeline {
                    '''
                }
             }
+           stage('Prod E2E') {
+               agent {
+                  docker {
+                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                     reuseNode true
+                  }
+               }
+                  environment {
+                     CI_ENVIRONMENT_URL = 'https://storied-clafoutis-d253a5.netlify.app'
+                  }
+
+               steps {
+                  sh '''
+                      npx playwright test --reporter=html
+                  '''
+               }
+               post {
+                  always {
+                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                  }
+               }
+
 
    }
 }
